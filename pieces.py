@@ -66,7 +66,7 @@ class Piece:
         self.live = False
 
     def toString(self):
-        return 0
+        return '0'
     
 class Pawn(Piece):
     img=0
@@ -438,7 +438,7 @@ class Knight(Piece):
 
         return moves
     def toString(self):
-        return 'k'
+        return 'N'
 
 
 

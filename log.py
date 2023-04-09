@@ -5,20 +5,24 @@ import pieces
 
 class Action:
     color = ''
-    
+    capture = False
+
     def __init__(self, action):
         self.action = action
         self.origin = self.action[:2]
         self.destination = self.action[2:]
+        
 
     def __str__(self):
-        return self.action
-
+        return self.action if self.color == '' else self.color.upper() + self.action
+    
+    
+    
 
 class ActionLog:
     def __init__(self):
         self.log = list()
-        
+
     def __len__(self):
         return len(self.log)
     
@@ -36,14 +40,23 @@ class ActionLog:
             newBoard.move((y1, x1), (y2, x2))
         return newBoard
 
+    
+    def updateActionColor(self):
+        if len(self.log) == 0: return
 
+        for i, a in enumerate(self.log):
+            a.color = 'w' if i % 2 == 0 else 'b'
+        
+#UNIT TEST
 if __name__ == '__main__':
     print('Unit Test')
     log = ActionLog()
     log.append(Action('c2c4'))
     log.append(Action('g8f6'))
     log.append(Action('b1c3'))
-    b = chess.Board(8, 8)
+    log.updateActionColor()
+    print(log)
+
     testBoard : chess.Board = log.toBoard()
     print('testBoard ---> ', type(testBoard))
     print(testBoard.toString())
