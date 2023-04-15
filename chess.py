@@ -96,6 +96,8 @@ class Board:
     def getIndexFromCoordinate(self, coordinate: str):
         return self.str_xCoordinates.index(coordinate[0]), self.str_yCoordinates.index(coordinate[1])
 
+
+
     def draw(self, win, color):
         if self.last and color==self.turn:
             y, x=self.last[0]
@@ -123,3 +125,7 @@ class Board:
                     _ += self.board[i][j].toString()
             output += _ +  '\n'
         return output
+
+
+if __name__ == '__main__':
+    pass
