@@ -48,14 +48,14 @@ class Piece:
         x=(4-self.column)+round(self.startx+(self.column*self.board_co[2]/6))
         y=3+round(self.starty+(self.row*self.board_co[3]/6))
         if self.selected and self.color==color:
-            pygame.draw.rect(win, (255, 0, 0), (x, y, 62, 62), 4)
+            pygame.draw.rect(win, '#33cc33', (x, y, 62, 62), 4)
             x_offset = 45
             y_offset = 45
             if self.move_list != None:
                 for coor in self.move_list:
                     coorx=(self.board_co[2]/6)*coor[0] + 8 + x_offset #(4-z[0])+round(113+(z[0]*525/6))-42
                     coory=(self.board_co[2]/6)*coor[1] + 8 + y_offset #3+round(113+(z[1]*525/6))-138
-                    pygame.draw.circle(win, "#eb344c", (coorx, coory), 28)
+                    pygame.draw.circle(win, "#33cc33", (coorx, coory), 28)
 
 
         win.blit(draw_this, (x, y))
