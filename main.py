@@ -59,6 +59,7 @@ def createAction(b: chess.Board, o: pieces.Piece, dest: tuple, plr: str) -> log.
         
     A.color = plr
     b.move((o.row, o.column), (dest[0], dest[1]))
+    print(A)
     return A
 
 
@@ -89,7 +90,7 @@ while True:
                     current_selected.selected = True
                     current_selected.update_valid_moves(b.board)
                 #Clicked on a tile that our currently selected piece can move into
-                elif (j, i) in current_selected.move_list:
+                elif (i, j) in current_selected.move_list:
                     main_log.append(createAction(b, current_selected, (i, j), turn))
                     current_selected.selected = False
                     current_selected = None

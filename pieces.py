@@ -48,14 +48,14 @@ class Piece:
         x=(4-self.column)+round(self.startx+(self.column*self.board_co[2]/6))
         y=3+round(self.starty+(self.row*self.board_co[3]/6))
         if self.selected and self.color==color:
-            pygame.draw.rect(win, '#33cc33', (x, y, 62, 62), 4)
+            pygame.draw.rect(win, '#1ae016', (x, y, 62, 62), 4)
             x_offset = 45
             y_offset = 45
             if self.move_list != None:
                 for coor in self.move_list:
-                    coorx=(self.board_co[2]/6)*coor[0] + 8 + x_offset #(4-z[0])+round(113+(z[0]*525/6))-42
-                    coory=(self.board_co[2]/6)*coor[1] + 8 + y_offset #3+round(113+(z[1]*525/6))-138
-                    pygame.draw.circle(win, "#33cc33", (coorx, coory), 28)
+                    coorx=(self.board_co[2]/6)*coor[1] + 8 + x_offset #(4-z[0])+round(113+(z[0]*525/6))-42
+                    coory=(self.board_co[2]/6)*coor[0] + 8 + y_offset #3+round(113+(z[1]*525/6))-138
+                    pygame.draw.circle(win, "#C0C0C0", (coorx, coory), 28)
 
 
         win.blit(draw_this, (x, y))
@@ -78,34 +78,24 @@ class Pawn(Piece):
         i=self.row
         j=self.column
         moves=[]
-        #valid moves for white
-        if self.color=="w":
-            try:
-                if board[i + 1][j] == 0:
-                    moves.append((j, i + 1))
+        
+        pos_to_check = [(i + 1, j), (i + 2, j)] if self.first else [(i + 1, j)]
+        for pos in pos_to_check:
+              #Check if the calculated position exists on the board
+            try: 
+                piece_at_pos = board[pos[0]][pos[1]]
+                diag_1 = board[i + 1][j - 1]
+                diag_2 = board[i + 1][j + 1]
             except IndexError:
-                pass
-            try:
-                if board[i + 2][j] == 0 and self.first:
-                    moves.append((j, i + 2))
-            except IndexError:
-                pass
-            
-            #Test if there is an enemy piece diagonal to pawn
-            try:
-                if board[i + 1][j - 1] != 0 and board[i + 1][j - 1].color == 'b':
-                    moves.append((j - 1, i + 1))
-            except IndexError:
-                pass
-            try:
-                if board[i + 1][j + 1] != 0 and board[i + 1][j + 1].color == 'b':
-                    moves.append((j + 1, i + 1))
-            except IndexError:
-                pass
-                
-        #valid moves for black
-        else:
-            pass
+                continue
+            #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+            if not isinstance(piece_at_pos, Piece):
+                moves.append(pos)
+
+            if isinstance(diag_1, Piece) and diag_1.color != self.color:
+                moves.append((diag_1.row, diag_1.column))
+            if isinstance(diag_2, Piece) and diag_2.color != self.color:
+                moves.append((diag_2.row, diag_2.column))
         return moves
     
     def toString(self):
@@ -113,328 +103,137 @@ class Pawn(Piece):
 class Bishop(Piece):
     img=1
     def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
-        #valid moves for white
-        if self.color=="w":
-            #Direction 1 (top left)
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j - d -1], Piece):
-                        if board[i + d + 1][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i + d +1))
-                        break
-                    else:
-                        moves.append((j - d - 1, i + d + 1))                  
+        i = self.row
+        j = self.column
+        moves = []
 
+        i_direction = (1, 1, -1, -1)
+        j_direction = (1, -1, -1, 1)
+        for direction in zip(i_direction, j_direction):
+            for k in range(len(board) - 1):
+                #Given a direction and a length of path k, calculate a possible position for the piece to move into
+                row_offset, column_offset = (k + 1) * direction[0], (k + 1) * direction[1]
+                pos = (i + row_offset, j + column_offset)
+                #Check if the calculated position exists on the board
+                try: 
+                    piece_at_pos = board[pos[0]][pos[1]]
                 except IndexError:
                     break
-            #Direction 2 (top right)
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j + d + 1], Piece):
-                        if board[i + d + 1][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i + d +1))
-                        break
-                    else:
-                        moves.append((j + d + 1, i + d + 1))
-                except IndexError:
+                #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+                if not isinstance(piece_at_pos, Piece) or piece_at_pos.color != self.color:
+                    moves.append(pos)
+                if isinstance(piece_at_pos, Piece):
                     break
-            #Direction 3 (bottom right)
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j + d + 1], Piece):
-                        if board[i - d - 1][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i - d - 1))
-                        break
-                    else:
-                        moves.append((j + d + 1, i - d - 1))
-                except IndexError:
-                    break
-            #Direction 4 (bottom left)
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j - d -1], Piece):
-                        if board[i - d - 1][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i - d - 1))
-                        break
-                    else:
-                        moves.append((j - d - 1, i - d - 1))
-                except IndexError:
-                    break
-        #valid moves for black   
-        else:
-            pass
         return moves
+
     def toString(self):
         return 'B'
 class Queen(Piece):
     img=2
     def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
-        if self.color == "w":
-            #Direction 1
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j], Piece):
-                        if board[i + d + 1][j].color == 'b':
-                            moves.append((j, i + d +1))
-                        break
-                    else:
-                        moves.append((j, i + d + 1))
-                except IndexError:
-                    break
-            #Direction 2
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j], Piece):
-                        if board[i - d - 1][j].color == 'b':
-                            moves.append((j, i - d - 1))
-                        break
-                    else:
-                        moves.append((j, i - d - 1))
-                except IndexError:
-                    break
-            #Direction 3
-            for d in range(7):
-                try:
-                    if isinstance(board[i][j - d -1], Piece):
-                        if board[i][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i))
-                        break
-                    else:
-                        moves.append((j - d - 1, i))
-                except IndexError:
-                    break
-            #Direction 4
-            for d in range(7):
-                try:
-                    if isinstance(board[i][j + d + 1], Piece):
-                        if board[i][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i))
-                        break
-                    else:
-                        moves.append((j + d + 1, i))
-                except IndexError:
-                    break
+        i = self.row
+        j = self.column
+        moves = []
 
-            #Direction 5 (top left)
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j - d -1], Piece):
-                        if board[i + d + 1][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i + d +1))
-                        break
-                    else:
-                        moves.append((j - d - 1, i + d + 1))                  
-
+        i_direction = (1, 1, 0, -1, -1, -1, 0, 1)
+        j_direction = (0, 1, 1, 1, 0, -1, -1, -1)
+        for direction in zip(i_direction, j_direction):
+            for k in range(len(board) - 1):
+                #Given a direction and a length of path k, calculate a possible position for the piece to move into
+                row_offset, column_offset = (k + 1) * direction[0], (k + 1) * direction[1]
+                pos = (i + row_offset, j + column_offset)
+                #Check if the calculated position exists on the board
+                try: 
+                    piece_at_pos = board[pos[0]][pos[1]]
                 except IndexError:
                     break
-            #Direction 6 (top right)
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j + d + 1], Piece):
-                        if board[i + d + 1][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i + d +1))
-                        break
-                    else:
-                        moves.append((j + d + 1, i + d + 1))
-                except IndexError:
+                #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+                if not isinstance(piece_at_pos, Piece) or piece_at_pos.color != self.color:
+                    moves.append(pos)
+                if isinstance(piece_at_pos, Piece):
                     break
-            #Direction 7 (bottom right)
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j + d + 1], Piece):
-                        if board[i - d - 1][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i - d - 1))
-                        break
-                    else:
-                        moves.append((j + d + 1, i - d - 1))
-                except IndexError:
-                    break
-            #Direction 8 (bottom left)
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j - d -1], Piece):
-                        if board[i - d - 1][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i - d - 1))
-                        break
-                    else:
-                        moves.append((j - d - 1, i - d - 1))
-                except IndexError:
-                    break
-        #valid moves for black
-        else:
-            pass
-
         return moves
     def toString(self):
         return 'Q'
 class King(Piece):
     img=3
-    def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
 
-        if self.color == 'w':
-            try:
-                if board[i][j - 1] == 0 or board[i][j - 1].color == 'b':
-                    moves.append((j - 1, i))
+    def valid_moves(self, board):
+        i = self.row
+        j = self.column
+        moves = []
+
+        pos_to_check = [(i + 1, j), 
+                        (i, j + 1),
+                        (i - 1, j),
+                        (i, j - 1), 
+                        (i + 1, j + 1),
+                        (i - 1, j + 1),
+                        (i - 1, j - 1),
+                        (i + 1, j - 1)]
+        for pos in pos_to_check:
+            #Check if the calculated position exists on the board
+            try: 
+                piece_at_pos = board[pos[0]][pos[1]]
             except IndexError:
-                pass
-            try:
-                if board[i + 1][j - 1] == 0 or board[i + 1][j - 1].color == 'b':
-                    moves.append((j - 1, i + 1))
-            except IndexError:
-                pass
-            try:
-                if board[i + 1][j] == 0 or board[i + 1][j].color == 'b':
-                    moves.append((j, i + 1))
-            except IndexError:
-                pass
-            try:
-                if board[i + 1][j + 1] == 0 or board[i + 1][j + 1].color == 'b':
-                    moves.append((j + 1, i + 1))
-            except IndexError:
-                pass
-            try:
-                if board[i][j + 1] == 0 or board[i][j + 1].color == 'b':
-                    moves.append((j + 1, i))
-            except IndexError:
-                pass
-            try:
-                if board[i - 1][j + 1] == 0 or board[i - 1][j + 1].color == 'b':
-                    moves.append((j + 1, i - 1))
-            except IndexError:
-                pass
-            try:
-                if board[i - 1][j] == 0 or board[i - 1][j].color == 'b':
-                    moves.append((j, i - 1))
-            except IndexError:
-                pass
-            try:
-                if board[i - 1][j - 1] == 0 or board[i - 1][j - 1].color == 'b':
-                    moves.append((j - 1, i - 1))
-            except IndexError:
-                pass
-        else:
-            pass
+                continue
+            #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+            if not isinstance(piece_at_pos, Piece) or piece_at_pos.color != self.color:
+                moves.append(pos)
+
         return moves
+
+    
     def toString(self):
         return 'K'
 class Rook(Piece):
     img=4
     def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
+        i = self.row
+        j = self.column
+        moves = []
 
-        if self.color == "w":
-            #Direction 1
-            for d in range(7):
-                try:
-                    if isinstance(board[i + d + 1][j], Piece):
-                        if board[i + d + 1][j].color == 'b':
-                            moves.append((j, i + d +1))
-                        break
-                    else:
-                        moves.append((j, i + d + 1))
+        i_direction = (1, 0, -1, 0)
+        j_direction = (0, 1, 0, -1)
+        for direction in zip(i_direction, j_direction):
+            for k in range(len(board) - 1):
+                #Given a direction and a length of path k, calculate a possible position for the piece to move into
+                row_offset, column_offset = (k + 1) * direction[0], (k + 1) * direction[1]
+                pos = (i + row_offset, j + column_offset)
+                #Check if the calculated position exists on the board
+                try: 
+                    piece_at_pos = board[pos[0]][pos[1]]
                 except IndexError:
                     break
-            #Direction 2
-            for d in range(7):
-                try:
-                    if isinstance(board[i - d - 1][j], Piece):
-                        if board[i - d - 1][j].color == 'b':
-                            moves.append((j, i - d - 1))
-                        break
-                    else:
-                        moves.append((j, i - d - 1))
-                except IndexError:
+                #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+                if not isinstance(piece_at_pos, Piece) or piece_at_pos.color != self.color:
+                    moves.append(pos)
+                if isinstance(piece_at_pos, Piece):
                     break
-            #Direction 3
-            for d in range(7):
-                try:
-                    if isinstance(board[i][j - d -1], Piece):
-                        if board[i][j - d -1].color == 'b':
-                            moves.append((j - d - 1, i))
-                        break
-                    else:
-                        moves.append((j - d - 1, i))
-                except IndexError:
-                    break
-            #Direction 4
-            for d in range(7):
-                try:
-                    if isinstance(board[i][j + d + 1], Piece):
-                        if board[i][j + d + 1].color == 'b':
-                            moves.append((j + d + 1, i))
-                        break
-                    else:
-                        moves.append((j + d + 1, i))
-                except IndexError:
-                    break
-        #valid moves for black
-        else:
-            pass
-
         return moves
+
     def toString(self):
         return 'R'
 class Knight(Piece):
     img=5
     def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
-        #Valid moves for Knight
-        if self.color == 'w':
-            try:
-                if board[i + 1][j - 2] == 0 or board[i + 1][j - 2].color == 'b':
-                    moves.append((j - 2, i + 1))
+        i = self.row
+        j = self.column
+        moves = []
+
+        pos_to_check = [(i + 2, j + 1), (i + 1, j + 2), 
+                        (i - 1, j + 2), (i - 2, j + 1),
+                        (i - 2, j - 1), (i - 1, j - 2),
+                        (i + 1, j - 2), (i + 2, j - 1)]
+        for pos in pos_to_check:
+            #Check if the calculated position exists on the board
+            try: 
+                piece_at_pos = board[pos[0]][pos[1]]
             except IndexError:
-                pass
-            try:
-                if board[i + 2][j - 1] == 0 or board[i + 2][j - 1].color == 'b':
-                    moves.append((j - 1, i + 2))
-            except IndexError:
-                pass
-            try:
-                if board[i + 2][j + 1] == 0 or board[i + 2][j + 1].color == 'b':
-                    moves.append((j + 1, i + 2))
-            except IndexError:
-                pass
-            try:
-                if board[i + 1][j + 2] == 0 or board[i + 1][j + 2].color == 'b':
-                    moves.append((j + 2, i + 1))
-            except IndexError:
-                pass
-            try:
-                if board[i - 1][j + 2] == 0 or board[i - 1][j + 2].color == 'b':
-                    moves.append((j + 2, i - 1))
-            except IndexError:
-                pass
-            try:
-                if board[i - 2][j + 1] == 0 or board[i - 2][j + 1].color == 'b':
-                    moves.append((j + 1, i - 2))
-            except IndexError:
-                pass
-            try:
-                if board[i - 2][j - 1] == 0 or board[i - 2][j - 1].color == 'b':
-                    moves.append((j - 1, i - 2))
-            except IndexError:
-                pass
-            try:
-                if board[i - 1][j - 2] == 0 or board[i - 1][j - 2].color == 'b':
-                    moves.append((j - 2, i - 1))
-            except IndexError:
-                pass
-        else:
-            pass
+                continue
+            #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+            if not isinstance(piece_at_pos, Piece) or piece_at_pos.color != self.color:
+                moves.append(pos)
 
         return moves
     def toString(self):

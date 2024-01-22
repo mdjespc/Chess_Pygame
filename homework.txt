@@ -1,5 +1,0 @@
-Want to click on a piece and see the valid moves
-Check for all valid moves for that piece. and pygame.drawcircle in that x-y position
-Once we click on a coordinate from the valid moves, we use the move method
-Otherwise, delete the valid moves and the circles
-Change the move method parameters to take in the position to move into
