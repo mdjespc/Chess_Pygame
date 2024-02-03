@@ -74,30 +74,54 @@ class Pawn(Piece):
         super().__init__(row, column, color)
         self.first=True
         self.pawn=True
+
     def valid_moves(self, board):
-        i=self.row
-        j=self.column
-        moves=[]
-        
-        pos_to_check = [(i + 1, j), (i + 2, j)] if self.first else [(i + 1, j)]
-        for pos in pos_to_check:
-              #Check if the calculated position exists on the board
-            try: 
-                piece_at_pos = board[pos[0]][pos[1]]
-                diag_1 = board[i + 1][j - 1]
-                diag_2 = board[i + 1][j + 1]
-            except IndexError:
-                continue
-            #If the position exists, test if it is taken by an allied piece, an enemy piece, or if it's empty
+        i = self.row
+        j = self.column
+        moves = []
+
+        # Determine the direction based on the color of the pawn
+        direction = 1 if self.color == "w" else -1
+
+        # Check one square forward
+        pos = (i + direction, j)
+        try:
+            piece_at_pos = board[pos[0]][pos[1]]
             if not isinstance(piece_at_pos, Piece):
                 moves.append(pos)
+        except IndexError:
+            pass
 
-            if isinstance(diag_1, Piece) and diag_1.color != self.color:
-                moves.append((diag_1.row, diag_1.column))
-            if isinstance(diag_2, Piece) and diag_2.color != self.color:
-                moves.append((diag_2.row, diag_2.column))
+        # Check two squares forward for the first move
+        if self.first:
+            pos_one = (i + direction, j)
+            pos_two = (i + 2 * direction, j)
+            try:
+                piece_at_pos_one = board[pos_one[0]][pos_one[1]]
+                piece_at_pos_two = board[pos_two[0]][pos_two[1]]
+                # Ensure that both the first and second squares are empty
+                if (
+                    not isinstance(piece_at_pos_one, Piece)
+                    and not isinstance(piece_at_pos_two, Piece)
+                ):
+                    moves.append(pos_two)
+            except IndexError:
+                pass
+
+        # Check diagonally for possible captures
+        for col_offset in [-1, 1]:
+            pos = (i + direction, j + col_offset)
+            try:
+                piece_at_pos = board[pos[0]][pos[1]]
+                if isinstance(piece_at_pos, Piece) and piece_at_pos.color != self.color:
+                    moves.append(pos)
+            except IndexError:
+                pass
+
         return moves
-    
+
+
+
     def toString(self):
         return 'P'
 class Bishop(Piece):
