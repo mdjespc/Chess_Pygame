@@ -19,7 +19,7 @@ class Game:
         self.board_img = pygame.transform.scale(pygame.image.load(os.path.join("chessPieces", "board.png")), (self.width, self.height))
         self.rect = (16, 16, 555, 555)
 
-        self.chess_board = chess.Board(8, 8)
+        self.chessboard = chess.Board(8, 8)
         self.main_log = log.ActionLog()
         self.current_selected = None
 
@@ -37,7 +37,7 @@ class Game:
 
     def handle_click_event(self):
         i, j = self.get_click_coordinates(pygame.mouse.get_pos())
-        b = self.chess_board.board
+        b = self.chessboard.board
         '''
         Check if there is a piece currently selected. If there is not, then update 'self.current_selected' to the clicked piece.
         Otherwise, if there is a piece currently selected, then the clicked obj can either be another piece from the same team, 
@@ -46,7 +46,7 @@ class Game:
         if self.current_selected == None:
             self.current_selected = b[i][j] #Storing the clicked piece on a variable
             self.current_selected.selected = True
-            self.current_selected.update_valid_moves(self.chess_board.board)
+            self.current_selected.update_valid_moves(self.chessboard.board)
         #There is a currently selected piece
         else:
             #Clicked on a different piece -> switch 'self.current_selected' to that piece
@@ -57,7 +57,15 @@ class Game:
                 self.current_selected.update_valid_moves(b)
             #Clicked on a tile that our currently selected piece can move into
             elif (i, j) in self.current_selected.move_list:
-                self.main_log.append(self.create_action(self.current_selected, (i, j)))
+                new_action =  self.create_action(self.current_selected, (i, j))
+                new_action.color = self.turn
+                if b[i][j] != 0:
+                    new_action.capture = True
+                    self.chessboard.remove_piece(i, j)
+                self.chessboard.move_piece((self.current_selected.row, self.current_selected.column), (i, j))
+                print(new_action)
+                self.main_log.append(new_action)
+                
                 self.current_selected.selected = False
                 self.current_selected = None
             #Clicked on an irrelevant tile -> clear 'self.current_selected'
@@ -71,27 +79,13 @@ class Game:
 
     Returns a 'log.Action' object by describing the type of action that's being taken (includes origin, destination, whether an enemy is
     being captured or not, and who's taking the action). This action can then be appended to a 'log.ActionLog' that can be used to update the state
-    the board.
+    of the board.
     '''
-    def create_action(self, origin, dest):
-        #assert self.plr == self.turn, AssertionError('Unable to create action -- It is %s team\'s action' %('White' if self.turn == 'w' else 'Black'))
-        #assert origin.color == self.plr, AssertionError('Unable to create action -- It is %s team\'s action' %('White' if self.turn == 'w' else 'Black'))
-        #Get string coordinate from o
-        str_o = ''.join([self.chess_board.str_xCoordinates[origin.row], self.chess_board.str_yCoordinates[origin.column]])
-        str_d = ''.join([self.chess_board.str_xCoordinates[dest[0]],  self.chess_board.str_yCoordinates[dest[1]]]) 
-        dest_obj = self.chess_board.board[dest[0]][dest[1]]
-        A = log.Action(''.join([str_o, str_d]))
-        if dest_obj == 0:
-            A.capture = False
-            
-        elif dest_obj.color == ('b' if origin.color == 'w' else 'w'):
-            self.chess_board.delete(dest[0], dest[1])
-            A.capture = True
-            
-        #A.color = self.plr
-        self.chess_board.move((origin.row, origin.column), (dest[0], dest[1]))
-        print(A)
-        return A
+    def create_action(self, piece : pieces.Piece, destination):
+        new_action = ''.join([self.chessboard.rows[piece.row], self.chessboard.columns[piece.column],
+                          self.chessboard.rows[destination[0]], self.chessboard.columns[1]])
+        new_action = log.Action(new_action)
+        return new_action
 
     def main_loop(self):
         while True:
@@ -102,7 +96,7 @@ class Game:
                     self.handle_click_event()
 
             self.win.blit(self.board_img, (0, 0))
-            self.chess_board.draw(self.win, self.color)
+            self.chessboard.draw(self.win, self.color)
             pygame.display.update()
             self.clock.tick(30)    
 

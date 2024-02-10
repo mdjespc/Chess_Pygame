@@ -11,8 +11,8 @@ class Board:
     board_co=(113, 113, 525, 525)
     startx=board_co[0]
     starty=board_co[1]
-    str_xCoordinates = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    str_yCoordinates = ['1', '2', '3', '4', '5', '6', '7', '8']
+    columns = 'abcdefgh'
+    rows = '12345678'
     def __init__(self, row, col):
         self.last=None
         self.copy=True
@@ -59,8 +59,6 @@ class Board:
         self.board[6][6]=Pawn(6, 6, "b")
         self.board[6][7]=Pawn(6, 7, "b")
 
-        self.turn="w"
-
     #Updates valid moves for every piece on the board
     def update_move(self):
         for i in range(self.row):
@@ -69,34 +67,27 @@ class Board:
                     self.board[i][j].update_valid_moves(self.board)
     
     
-    def move(self, start, end):
-        p=self.board[start[0]][start[1]] #creating a reference for the piece that's moving
+    def move_piece(self, start, end):
+        piece = self.board[start[0]][start[1]] #creating a reference for the piece that's moving
 
-        if p == 0:
+        if piece == 0:
             return
 
-        if isinstance(p, Pawn):
-            p.first = False
+        if isinstance(piece, Pawn):
+            piece.first = False
 
-        self.board[start[0]][start[1]]=0 #deleting the piece data
-        self.board[end[0]][end[1]]=p #copying the piece data
-        self.board[end[0]][end[1]].row=end[0]
-        self.board[end[0]][end[1]].column=end[1]
+        self.board[start[0]][start[1]] = 0 #deleting the piece data
+        self.board[end[0]][end[1]] = piece #copying the piece data
+        self.board[end[0]][end[1]].row = end[0]
+        self.board[end[0]][end[1]].column = end[1]
 
         self.update_move()
     
-    def delete(self, i, j):
+    def remove_piece(self, i, j):
         self.captured_pieces.append(self.board[i][j])
         self.board[i][j].delete()
         self.board[i][j] = 0
         
-    #Map string coordinates with list index
-    def getElementFromCoordinate(self, coordinate: str):
-        return self.board[self.str_yCoordinates.index(coordinate[1])][self.str_xCoordinates.index(coordinate[0])]
-    def getIndexFromCoordinate(self, coordinate: str):
-        return self.str_xCoordinates.index(coordinate[0]), self.str_yCoordinates.index(coordinate[1])
-
-
 
     def draw(self, win, color):
         if self.last and color==self.turn:
