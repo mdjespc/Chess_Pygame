@@ -38,15 +38,22 @@ class Game:
     def handle_click_event(self):
         i, j = self.get_click_coordinates(pygame.mouse.get_pos())
         b = self.chessboard.board
+ 
         '''
         Check if there is a piece currently selected. If there is not, then update 'self.current_selected' to the clicked piece.
         Otherwise, if there is a piece currently selected, then the clicked obj can either be another piece from the same team, 
         a tile that the currently selected piece can move into, or none of the above.
         '''
+        print(self.current_selected)
         if self.current_selected == None:
-            self.current_selected = b[i][j] #Storing the clicked piece on a variable
-            self.current_selected.selected = True
-            self.current_selected.update_valid_moves(self.chessboard.board)
+            #Storing the clicked piece on a variable. Ignore the selection if turn color does not match piece color
+            try:
+                self.current_selected = b[i][j] if b[i][j].color == self.turn else None
+                self.current_selected.selected = True
+                self.current_selected.update_valid_moves(self.chessboard.board)
+            except AttributeError as err:
+                print("Attribute error:", err)
+                return
         #There is a currently selected piece
         else:
             #Clicked on a different piece -> switch 'self.current_selected' to that piece
@@ -65,9 +72,14 @@ class Game:
                 self.chessboard.move_piece((self.current_selected.row, self.current_selected.column), (i, j))
                 print(new_action)
                 self.main_log.append(new_action)
-                
+
                 self.current_selected.selected = False
                 self.current_selected = None
+
+                #After declaring a move, pass the turn to the other team
+                
+                self.alternate_turns()
+
             #Clicked on an irrelevant tile -> clear 'self.current_selected'
             else:
                 self.current_selected.selected = False
@@ -86,6 +98,10 @@ class Game:
                           self.chessboard.rows[destination[0]], self.chessboard.columns[1]])
         new_action = log.Action(new_action)
         return new_action
+    
+    def alternate_turns(self):
+        self.turn = "w" if self.turn == "b" else "b"
+        print(f"Alternating turn to {self.turn}")
 
     def main_loop(self):
         while True:
@@ -96,7 +112,7 @@ class Game:
                     self.handle_click_event()
 
             self.win.blit(self.board_img, (0, 0))
-            self.chessboard.draw(self.win, self.color)
+            self.chessboard.draw(self.win, self.turn)
             pygame.display.update()
             self.clock.tick(30)    
 
